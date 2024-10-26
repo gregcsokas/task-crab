@@ -1,36 +1,58 @@
-use std::io;
+use clap::{arg, Command};
 
-use ratatui::{
-    crossterm::event::{self, KeyCode, KeyEventKind},
-    style::Stylize,
-    widgets::Paragraph,
-    DefaultTerminal,
-};
-
-
-fn main() -> io::Result<()> {
-    let mut terminal = ratatui::init();
-    terminal.clear()?;
-
-    let app_result = run(terminal);
-    ratatui::restore();
-
-    app_result
+#[derive(Debug, PartialEq)]
+enum TaskPriority {
+    High,
+    Medium,
+    Low
 }
 
-fn run(mut terminal: DefaultTerminal) -> io::Result<()> {
-    loop {
-        terminal.draw(|frame| {
-            let greeting = Paragraph::new("Hello Ratatui in the Task-Crab project (press 'q' to quit)")
-                .white()
-                .on_blue();
-            frame.render_widget(greeting, frame.area());
-        })?;
+impl TaskPriority {
 
-        if let event::Event::Key(key) = event::read()? {
-            if key.kind == KeyEventKind::Press && key.code == KeyCode::Char('q') {
-                return Ok(());
-            }
+    fn to_string(&self) -> String {
+        match self {
+            TaskPriority::High => '🔴'.to_string(),
+            TaskPriority::Medium => '🟡'.to_string(),
+            TaskPriority::Low => '🟢'.to_string()
         }
     }
+
+    fn from_str(priority: &str) -> Option<TaskPriority> {
+        match priority {
+            "high" => Some(TaskPriority::High),
+            "medium" => Some(TaskPriority::Medium),
+            "low" => Some(TaskPriority::Low),
+            _ => None
+        }
+    }
+}
+
+fn main() {
+    let _matches = Command::new("🦀 The Task-Crab 🦀")
+        .version("1.0")
+        .about("🦀 The Task-Crab 🦀")
+        .arg(arg!(-d --debug ... "Turn debbugging information on"))
+        .subcommand(
+            Command::new("create")
+            .about("Create a new task")
+                .arg(arg!([name] "Name of the task to create"))
+                .arg(arg!([description] "Description of the task to create"))
+                .arg(
+                    arg!([priority] "Task priority number")
+                    .value_parser(["high", "medium", "low"])
+                )
+        )
+        .subcommand(
+            Command::new("list")
+            .about("List tasks")
+        )
+        .subcommand(
+            Command::new("delete")
+            .about("Delete a task")
+        )
+        .subcommand(
+            Command::new("update")
+            .about("Update task")
+        )
+        .get_matches();
 }
